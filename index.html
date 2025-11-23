@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kolay DinoGame</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 900px;
+            height: 350px;
+            background: #f8f9fa;
+            border: 3px solid #343a40;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        #game-scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB 60%, #f8f9fa 40%);
+        }
+        
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(to top, #5D4037, #8D6E63);
+            z-index: 1;
+        }
+        
+        #dino {
+            position: absolute;
+            bottom: 50px;
+            left: 120px;
+            width: 35px;
+            height: 45px;
+            background: #4CAF50;
+            border-radius: 8px 8px 0 0;
+            z-index: 10;
+            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dino-head {
+            position: absolute;
+            width: 25px;
+            height: 20px;
+            background: #4CAF50;
+            top: -12px;
+            left: 5px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .dino-eye {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            right: 5px;
+        }
+        
+        .dino-eye::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: black;
+            border-radius: 50%;
+            top: 1.5px;
+            left: 1.5px;
+        }
+        
+        .dino-leg {
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background: #388E3C;
+            bottom: -12px;
+        }
+        
+        .leg-front { left: 8px; }
+        .leg-back { right: 8px; }
+        
+        .obstacle {
+            position: absolute;
+            bottom: 50px;
+            z-index: 5;
+        }
+        
+        .cactus {
+            width: 18px;
+            height: 40px;
+            background: #2E7D32;
+            border-radius: 3px;
+        }
+        
+        .cactus::before, .cactus::after {
+            content: '';
+            position: absolute;
+            background: #2E7D32;
+            border-radius: 3px;
+        }
+        
+        .cactus::before {
+            width: 12px;
+            height: 8px;
+            top: 8px;
+            left: -6px;
+        }
+        
+        .cactus::after {
+            width: 10px;
+            height: 6px;
+            top: 20px;
+            right: -5px;
+        }
+        
+        .bird {
+            width: 30px;
+            height: 20px;
+            background: #FF6D00;
+            border-radius: 10px 5px 5px 10px;
+            bottom: 150px;
+        }
+        
+        .bird::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 4px;
+            background: #FF6D00;
+            top: 4px;
+            left: -4px;
+            border-radius: 2px;
+        }
+        
+        #score-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 20;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        #score {
+            font-size: 20px;
+            font-weight: bold;
+            color: #343a40;
+        }
+        
+        #high-score {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        
+        #game-over, #start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 100;
+            width: 350px;
+            backdrop-filter: blur(10px);
+        }
+        
+        #game-over {
+            display: none;
+        }
+        
+        h1 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: #6c757d;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 0 #388E3C;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #388E3C;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #388E3C;
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #495057;
+            backdrop-filter: blur(5px);
+        }
+        
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50px;
+            z-index: 2;
+            animation: cloudMove 40s linear infinite;
+        }
+        
+        @keyframes cloudMove {
+            from { transform: translateX(900px); }
+            to { transform: translateX(-200px); }
+        }
+        
+        .jump {
+            animation: jump 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes jump {
+            0% { bottom: 50px; transform: scaleY(1); }
+            50% { bottom: 180px; transform: scaleY(0.9); }
+            100% { bottom: 50px; transform: scaleY(1); }
+        }
+        
+        .warning {
+            position: absolute;
+            top: 50%;
+            right: 50px;
+            transform: translateY(-50%);
+            color: #dc3545;
+            font-size: 24px;
+            font-weight: bold;
+            opacity: 0;
+            z-index: 15;
+            transition: opacity 0.3s;
+        }
+        
+        .show-warning {
+            animation: warningBlink 1s 3;
+        }
+        
+        @keyframes warningBlink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-scene">
+            <div id="ground"></div>
+            <div id="dino">
+                <div class="dino-head"></div>
+                <div class="dino-eye"></div>
+                <div class="dino-leg leg-front"></div>
+                <div class="dino-leg leg-back"></div>
+            </div>
+            
+            <div class="warning">⚠️ ENGEL!</div>
+            
+            <div id="score-container">
+                <div id="score">Skor: 0</div>
+                <div id="high-score">En İyi: 0</div>
+            </div>
+            
+            <div class="instructions">
+                🎮 SPACE, ⬆️ YUKARI OK veya TIKLAYARAK zıpla
+            </div>
+            
+            <div id="start-screen">
+                <h1>🦖 Dino Macerası</h1>
+                <p>Engelleri görmeden önce uyarı alacaksın!</p>
+                <p>Daha uzun süre dayan, daha çok puan topla! 🏆</p>
+                <button id="start-button">BAŞLA</button>
+            </div>
+            
+            <div id="game-over">
+                <h1>Oyun Bitti! 🎯</h1>
+                <p id="final-score">Skorun: 0</p>
+                <p id="new-high-score" style="display:none; color: #dc3545; font-weight: bold;">🎉 Yeni Rekor Kırdın!</p>
+                <button id="restart-button">TEKRAR DENE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dino = document.getElementById('dino');
+        const gameScene = document.getElementById('game-scene');
+        const scoreDisplay = document.getElementById('score');
+        const highScoreDisplay = document.getElementById('high-score');
+        const gameOverDisplay = document.getElementById('game-over');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const newHighScoreDisplay = document.getElementById('new-high-score');
+        const warning = document.querySelector('.warning');
+        
+        let isJumping = false;
+        let isGameOver = false;
+        let isGameStarted = false;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('dinoHighScore')) || 0;
+        let gameSpeed = 6; // Daha yavaş başlangıç
+        let obstacleInterval;
+        let gameLoop;
+        
+        // Başlangıç ayarları
+        highScoreDisplay.textContent = `En İyi: ${highScore}`;
+        
+        // Zıplama fonksiyonu
+        function jump() {
+            if (isJumping || !isGameStarted || isGameOver) return;
+            
+            isJumping = true;
+            dino.classList.add('jump');
+            
+            setTimeout(() => {
+                dino.classList.remove('jump');
+                isJumping = false;
+            }, 500);
+        }
+        
+        // Engel oluşturma
+        function createObstacle() {
+            if (!isGameStarted || isGameOver) return;
+            
+            const obstacleTypes = ['cactus', 'cactus', 'bird'];
+            const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            
+            const obstacle = document.createElement('div');
+            obstacle.className = `obstacle ${type}`;
+            obstacle.style.left = '900px';
+            gameScene.appendChild(obstacle);
+            
+            // Engel gelmeden önce uyarı göster
+            showWarning();
+            
+            return obstacle;
+        }
+        
+        // Engel uyarısı
+        function showWarning() {
+            warning.classList.add('show-warning');
+            setTimeout(() => {
+                warning.classList.remove('show-warning');
+            }, 3000);
+        }
+        
+        // Çarpışma kontrolü
+        function checkCollision(obstacle) {
+            const dinoRect = dino.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+            
+            // Daha hassas çarpışma kontrolü
+            const collisionMargin = 5;
+            
+            return !(
+                dinoRect.right - collisionMargin < obstacleRect.left + collisionMargin ||
+                dinoRect.left + collisionMargin > obstacleRect.right - collisionMargin ||
+                dinoRect.bottom - collisionMargin < obstacleRect.top + collisionMargin ||
+                dinoRect.top + collisionMargin > obstacleRect.bottom - collisionMargin
+            );
+        }
+        
+        // Oyun döngüsü
+        function updateGame() {
+            if (!isGameStarted || isGameOver) return;
+            
+            const obstacles = document.querySelectorAll('.obstacle');
+            obstacles.forEach(obstacle => {
+                const currentLeft = parseInt(obstacle.style.left);
+                obstacle.style.left = (currentLeft - gameSpeed) + 'px';
+                
+                // Çarpışma kontrolü
+                if (checkCollision(obstacle)) {
+                    gameOver();
+                    return;
+                }
+                
+                // Engel ekrandan çıktığında
+                if (currentLeft < -50) {
+                    obstacle.remove();
+                    score += 2; // Daha az puan artışı
+                    scoreDisplay.textContent = `Skor: ${score}`;
+                    
+                    // Her 100 puanda hafif hızlan
+                    if (score % 100 === 0) {
+                        gameSpeed += 0.3;
+                    }
+                }
+            });
+        }
+        
+        // Oyun başlatma
+        function startGame() {
+            if (isGameStarted) return;
+            
+            isGameStarted = true;
+            isGameOver = false;
+            score = 0;
+            gameSpeed = 6;
+            
+            startScreen.style.display = 'none';
+            gameOverDisplay.style.display = 'none';
+            scoreDisplay.textContent = `Skor: ${score}`;
+            
+            // Mevcut engelleri temizle
+            document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
+            
+            // Daha uzun aralıklarla engel (2000ms = 2 saniye)
+            obstacleInterval = setInterval(createObstacle, 2000);
+            
+            // Oyun döngüsü
+            gameLoop = setInterval(updateGame, 20);
+            
+            // İlk engelden önce biraz zaman tanı
+            setTimeout(() => {
+                createObstacle();
+            }, 3000);
+        }
+        
+        // Oyun bitişi
+        function gameOver() {
+            isGameOver = true;
+            isGameStarted = false;
+            
+            clearInterval(obstacleInterval);
+            clearInterval(gameLoop);
+            
+            // Skor kontrolü
+            finalScoreDisplay.textContent = `Skorun: ${score}`;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('dinoHighScore', highScore);
+                highScoreDisplay.textContent = `En İyi: ${highScore}`;
+                newHighScoreDisplay.style.display = 'block';
+            } else {
+                newHighScoreDisplay.style.display = 'none';
+            }
+            
+            gameOverDisplay.style.display = 'block';
+        }
+        
+        // Yeniden başlatma
+        function restartGame() {
+            gameOverDisplay.style.display = 'none';
+            startGame();
+        }
+        
+        // Olay dinleyicileri
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', restartGame);
+        
+        // Klavye kontrolleri
+        document.addEventListener('keydown', (e) => {
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && isGameStarted) {
+                e.preventDefault();
+                jump();
+            } else if (e.code === 'KeyR' && isGameOver) {
+                restartGame();
+            } else if (!isGameStarted && !isGameOver) {
+                startGame();
+            }
+        });
+        
+        // Mobil kontroller
+        gameScene.addEventListener('click', () => {
+            if (isGameStarted) {
+                jump();
+            } else {
+                startGame();
+            }
+        });
+        
+        // Sayfa yüklendiğinde bulut ekle
+        window.addEventListener('load', () => {
+            for (let i = 0; i < 4; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = Math.random() * 80 + 60 + 'px';
+                cloud.style.height = Math.random() * 40 + 30 + 'px';
+                cloud.style.top = Math.random() * 120 + 30 + 'px';
+                cloud.style.left = Math.random() * 600 + 'px';
+                cloud.style.animationDelay = (Math.random() * 20) + 's';
+                gameScene.appendChild(cloud);
+            }
+        });
+    </script>
+</body>
+</html>
